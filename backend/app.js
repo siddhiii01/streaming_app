@@ -9,14 +9,27 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT;
 
-
-
 //Connecting to frontend
 //Middleware
 app.use(cors({
   origin: 'http://localhost:5173', // React Dev Server
   credentials: true
 }));
+
+//Parse Json 
+app.use(express.json()); //required to read req.body POST , PUT, PATCH 
+
+//Custom Logger Middleware
+app.use((req,res, next) => {
+    console.log("Incoming request: ");
+    console.log(`req.method: ${req.method}`);
+    console.log(`req.headers: ${req.headers}`);
+    console.log(`req.url: ${req.url}`);
+    console.log(`req.body: ${req.body}`);
+    next();
+});
+
+
 
 //JWT using Auth0
 const jwtCheck = auth({
@@ -25,7 +38,10 @@ const jwtCheck = auth({
     tokenSigningAlg: 'RS256'
 });
 
-
+//Testing Route
+app.get('/', (req,res) => {
+    res.send('server with cors')
+})
 
 // Apply only to protected routes, not global
 
