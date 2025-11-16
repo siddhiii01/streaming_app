@@ -50,7 +50,7 @@ app.get('/api/check', (req,res) => {
 
 //tetsing Route with auth0
 //this route will fail bcoz we have not defined anything on frontend for sending token to backedn
-app.get('/api/protected/', jwtCheck, (req,res) => {
+app.get('/api/protected', jwtCheck, (req,res) => {
     res.json({
         message: 'Proctected route accessed',
         auth: req.auth //created by auth middleware
