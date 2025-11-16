@@ -23,13 +23,11 @@ app.use(express.json()); //required to read req.body POST , PUT, PATCH
 app.use((req,res, next) => {
     console.log("Incoming request: ");
     console.log(`req.method: ${req.method}`);
-    console.log(`req.headers: ${req.headers}`);
+    console.log(`req.headers: ${JSON.stringify(req.headers)}`);
     console.log(`req.url: ${req.url}`);
-    console.log(`req.body: ${req.body}`);
+    console.log(`req.body: ${JSON.stringify(req.body)}`);
     next();
 });
-
-
 
 //JWT using Auth0
 const jwtCheck = auth({
@@ -39,8 +37,26 @@ const jwtCheck = auth({
 });
 
 //Testing Route
-app.get('/', (req,res) => {
-    res.send('server with cors')
+// app.get('/', (req,res) => {
+//     res.send('server with cors')
+// })
+
+//testing Route w-out auth0
+app.get('/api/check', (req,res) => {
+    res.json({
+        message: "No auth on this route"
+    });
+})
+
+//tetsing Route with auth0
+//this route will fail bcoz we have not defined anything on frontend for sending token to backedn
+app.get('/api/protected/', jwtCheck, (req,res) => {
+    res.json({
+        message: 'Proctected route accessed',
+        auth: req.auth //created by auth middleware
+        //req.auth -> if user is logged in it contains user information
+        //if user is not logged in it becomes undefined or user is NOT authenticated
+    })
 })
 
 // Apply only to protected routes, not global
