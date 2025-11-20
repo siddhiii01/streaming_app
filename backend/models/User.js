@@ -6,7 +6,7 @@ const userSchema = new Schema({
     auth0Id: { 
         type: String, 
         required: true, 
-        unique: true 
+       
     },
     email: String,
     name: String,

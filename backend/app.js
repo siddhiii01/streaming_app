@@ -1,8 +1,9 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import {auth} from "express-oauth2-jwt-bearer";
+import {auth } from "express-oauth2-jwt-bearer";
 import User from "./models/User.js";
+import mongoose from "mongoose";
 
 dotenv.config();
 
@@ -29,37 +30,56 @@ app.use((req,res, next) => {
     next();
 });
 
+
 //JWT using Auth0
 const jwtCheck = auth({
     audience: process.env.AUTH0_AUDIENCE,
-    issuerBaseURL: `https://${process.env.AUTH0_DOMAIN}`,
+    issuerBaseURL: `https://${process.env.AUTH0_DOMAIN}/`,
     tokenSigningAlg: 'RS256'
 });
 
-//Testing Route
-// app.get('/', (req,res) => {
-//     res.send('server with cors')
-// })
 
-//testing Route w-out auth0
-app.get('/api/check', (req,res) => {
-    res.json({
-        message: "No auth on this route"
-    });
+main()
+    .then(() => {console.log('Connected to MongoDB')})
+    .catch(err => console.log(`MongoDB: ${err}`));
+
+async function main() {
+  await mongoose.connect(process.env.MONGODB_URI);
+
+}
+
+app.post('/api/protected', jwtCheck, async (req, res) => {
+    console.log("TOKEN CLAIMES: ", req.auth);
+
+    const auth0Id = req.auth.payload.sub;
+    console.log("AUTH0ID: ", auth0Id);
+
+    const {email, name} = req.body;
+
+    try{
+        let user = await User.findOne({auth0Id});
+
+        if(!user){
+            user = new User({auth0Id, email, name});
+            await user.save();
+            console.log("User saved to Database");
+        } else {
+            console.log("User already exist in DB");   
+        }
+
+        res.json({
+            message: "Protected route accessed",
+            tokenClaims: req.auth,       
+            userInDB: user 
+        });
+
+    } catch(error){
+        console.log("MongoDB Error:", e.message);
+        res.status(500).json({ error: "Database error" });
+    }
+    
 })
 
-//tetsing Route with auth0
-//this route will fail bcoz we have not defined anything on frontend for sending token to backedn
-app.get('/api/protected', jwtCheck, (req,res) => {
-    res.json({
-        message: 'Proctected route accessed',
-        auth: req.auth //created by auth middleware
-        //req.auth -> if user is logged in it contains user information
-        //if user is not logged in it becomes undefined or user is NOT authenticated
-    })
-})
-
-// Apply only to protected routes, not global
 
 
 app.listen(port, () => {

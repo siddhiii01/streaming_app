@@ -1,15 +1,30 @@
 import { useAuth0 } from "@auth0/auth0-react";
-import { makeAuthRequest } from "./public/api";
+import { makeAuthRequest } from "./public/makeAuthRequest";
 import { useState } from "react";
 
 
 const Profile = () => {
-  const { user, isAuthenticated, isLoading,  getAccessTokenSilently } = useAuth0();
+  //from useAuth0 -> we get "ID token" for fronetnd contains all the user infomation 
+  // here user object has all the user information -> user.name, user.email  ....
+  //from getAccessTokenSilently -> we get "access token" we send this to out backend -> backend verfies the access token
+  const { user, isAuthenticated, isLoading,  getAccessTokenSilently } = useAuth0(); 
   const [response, setResponse] = useState(null);
 
   const testProtected = async () => {
-    console.log('testing /api/protected');
-    const res = await makeAuthRequest(getAccessTokenSilently, "api/protected");
+    // console.log('testing /api/protected');
+    // console.log("ENV audience:", import.meta.env.VITE_AUTH0_AUDIENCE);
+
+    const res = await makeAuthRequest(
+      getAccessTokenSilently,
+      "api/protected",
+      {
+        method: "POST",
+        data: {
+          email: user.email,
+          name: user.name,
+        }
+      }
+    );
     setResponse(res);
   };
 
